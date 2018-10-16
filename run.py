@@ -13,7 +13,6 @@ app.config['SECRET_KEY'] = 'some-secret-string'
 db = SQLAlchemy(app)
 @app.before_first_request
 def create_tables():
-    # db.drop_all(bind=None)
     db.create_all()
 
 app.config['JWT_SECRET_KEY'] = 'jwt-secret-string'
@@ -32,13 +31,10 @@ def check_if_token_in_blacklist(decrypted_token):
 
 import views, models, resources
 
-api.add_resource(resources.UserRegistration, '/registration')
+api.add_resource(resources.UserRegistration, '/users')
 api.add_resource(resources.UserLogin, '/access-tokens')
 api.add_resource(resources.UserProfile, '/me')
 api.add_resource(resources.UserLogoutAccess, '/access-tokens/delete')
 api.add_resource(resources.UserLogoutRefresh, '/logout/refresh')
 api.add_resource(resources.TokenRefresh, '/access-tokens/refresh')
-# api.add_resource(resources.AllUsers, '/users')
-api.add_resource(resources.SecretResource, '/secret')
-api.add_resource(resources.Ideas, '/ideas/<id>')
-# api.add_resource(resources.Ideas, '/ideas')
+api.add_resource(resources.Ideas, '/ideas/<id>', '/ideas')

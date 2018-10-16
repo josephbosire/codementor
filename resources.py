@@ -47,7 +47,7 @@ class UserRegistration(Resource):
                 'message': 'User {} was created'.format(data['name']),
                 'jwt': access_token,
                 'refresh_token': refresh_token
-            }
+            }, 201
         except:
             return {'message': 'Something went wrong'}, 500
         return data
@@ -77,7 +77,7 @@ class UserLogin(Resource):
             return {
                 'jwt': access_token,
                 'refresh_token': refresh_token
-            }
+            }, 201
         else:
             return {'message': 'Wrong credentials'}
 
@@ -102,7 +102,7 @@ class UserLogoutAccess(Resource):
         try:
             revoked_token = RevokedTokenModel(jti=jti)
             revoked_token.add()
-            return {'message': 'Access token has been revoked'}
+            return {'message': 'Access token has been revoked'}, 204
         except:
             return {'message': 'Something went wrong'}, 500
 
@@ -114,7 +114,7 @@ class UserLogoutRefresh(Resource):
         try:
             revoked_token = RevokedTokenModel(jti=jti)
             revoked_token.add()
-            return {'message': 'Refresh token has been revoked'}
+            return {'message': 'Refresh token has been revoked'}, 204
         except:
             return {'message': 'Something went wrong'}, 500
 
@@ -158,7 +158,7 @@ class Ideas(Resource):
                 'average': calculate_avergage(new_idea),
                 'created_at': new_idea.created_at,
 
-            }
+            }, 201
         except:
             return {'message': 'Something went wrong'}, 500
 
@@ -168,17 +168,51 @@ class Ideas(Resource):
         if idea:
             db.session.delete(idea)
             db.session.commit()
+            return {}, 204
         else:
             return  {"msg": "Resource not found"}, 404
 
     @jwt_required
     def get(self, id):
-        print("GET CALLED")
+        if id:
+            idea = IdeaModel.find_by_id(id)
+            return {
+                'id': idea.id,
+                'content': idea.content,
+                'impact': idea.impact,
+                'ease': idea.ease,
+                'confidence': idea.confidence,
+                'average': calculate_avergage(idea),
+                'created_at': idea.created_at,
 
-    @jwt_required
-    def get(self):
-        print("HERE")
-        return IdeaModel.return_paginated()
+            }
+        else:
+            return IdeaModel.return_paginated()
+
+    def put(self, id):
+        data = self.reqparse_args.parse_args()
+        idea = IdeaModel.find_by_id(id)
+        idea.content = data['content']
+        idea.impact = data['impact']
+        idea.ease = data['ease']
+        idea.confidence = data['confidence']
+        try:
+            db.session.commit()
+            db.session.refresh(idea)
+            return {
+                'id': idea.id,
+                'content': idea.content,
+                'impact': idea.impact,
+                'ease': idea.ease,
+                'confidence': idea.confidence,
+                'average': calculate_avergage(idea),
+                'created_at': idea.created_at,
+
+            }
+        except:
+            return {'message': 'Something went wrong'}, 500
+
+
 
 
 class TokenRefresh(Resource):
